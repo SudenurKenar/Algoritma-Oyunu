@@ -1,18 +1,19 @@
 // app.js
 import Phaser from 'phaser';
-import { GameConfig } from './src/core/config.js'; // Başında ./ olduğundan emin olalım
+import { GameConfig } from './src/core/config.js';
 import { MainMenu } from './src/scenes/MainMenu.js';
-import { Part1 } from './src/scenes/Part1.js';
 
-// Eğer hala hata alırsanız, yukarıdaki yolları şu şekilde deneyin:
-// import { Part1 } from '/src/scenes/Part1.js'; (Baştaki / kök dizini temsil eder)
+// Diziler (Array) Seviyesi
+import { ArrayPart } from './src/scenes/Part1/ArrayPart.js';
+import { ArrayANI } from './src/scenes/Part2/ArrayANI.js';
+
+// Bağlı Liste (Linked List) Seviyesi
+import { LinkedListPart } from './src/scenes/Part1/LinkedListPart.js';
+import { LinkedListANI } from './src/scenes/Part2/LinkedListANI.js';
 
 const finalConfig = {
     ...GameConfig,
-    scene: [MainMenu, Part1]
+    scene: [MainMenu, ArrayPart, ArrayANI, LinkedListPart, LinkedListANI] // <-- Listeye ekledik
 };
 
-// Oyunu başlatan asil komut
 new Phaser.Game(finalConfig);
-
-console.log("Algo-Quest Başlatılıyor, Hanımım!");
