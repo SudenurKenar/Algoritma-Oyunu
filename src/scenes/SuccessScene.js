@@ -10,41 +10,61 @@ export class SuccessScene extends Phaser.Scene {
         const { nextScene, currentScene } = data;
         const { width, height } = this.scale;
 
-        // 1. Arka Plan Karartma (Siyah rengi %70 şeffaflıkla kullandık, tamamen görünmez değil)
+        // 1. Arka Plan Karartma
         this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7);
 
         // 2. Tebrik Paneli
-        const panel = this.add.rectangle(width / 2, height / 2, 400, 250, Theme.surface)
+        const panel = this.add.rectangle(width / 2, height / 2, 420, 280, Theme.surface)
             .setStrokeStyle(3, Theme.accent);
 
-        this.add.text(width / 2, height / 2 - 60, "TEBRİKLER!", {
-            fontSize: '36px', fontFamily: Theme.fontFamily, color: '#ffff00', fontStyle: 'bold'
+        this.add.text(width / 2, height / 2 - 85, "TEBRİKLER!", {
+            fontSize: '32px', fontFamily: Theme.fontFamily, color: '#ffff00', fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        this.add.text(width / 2, height / 2 - 10, "Bölüm Başarıyla Tamamlandı", {
-            fontSize: '18px', fontFamily: Theme.fontFamily, color: '#ffffff'
+        this.add.text(width / 2, height / 2 - 35, "Bölüm Başarıyla Tamamlandı", {
+            fontSize: '16px', fontFamily: Theme.fontFamily, color: '#ffffff'
         }).setOrigin(0.5);
 
-        // 3. Butonlar
-        this.createButton(width / 2 - 100, height / 2 + 60, "Ana Menü", () => {
-            this.scene.stop(currentScene);
-            this.scene.stop('SuccessScene');
+        // --- BUTONLAR (FontAwesome İkonlu Üçlü Nizam) ---
+
+        // A. Ana Menü Butonu (İkon: \uf015 - Home)
+        this.createIconButton(width / 2 - 130, height / 2 + 55, "\uf015", "MENU", () => {
+            this.stopAll(currentScene);
             this.scene.start('MainMenu');
         });
 
-        this.createButton(width / 2 + 100, height / 2 + 60, "➡ SONRAKİ", () => {
-            const currentLevelId = this.getCurrentLevelId(currentScene);
+        // B. Bölümler Butonu (İkon: \uf279 - Map)
+        this.createIconButton(width / 2, height / 2 + 55, "\uf279", "MAP", () => {
+            this.stopAll(currentScene);
+            this.scene.start('LevelSelect');
+        });
+
+        // C. Sonraki / Arşive Dön Butonu (İkon: \uf061 - Arrow Right / \uf008 - Film)
+        const isFromGallery = currentScene.endsWith('ANI');
+        const nextLabel = isFromGallery ? "ARCHIVE" : "NEXT";
+        const nextIcon = isFromGallery ? "\uf008" : "\uf061";
+
+        this.createIconButton(width / 2 + 130, height / 2 + 55, nextIcon, nextLabel, () => {
+            const levelData = this.getLevelData(currentScene);
             const unlockedLevel = parseInt(localStorage.getItem('unlockedLevel')) || 1;
 
-            // Eğer bitirilen seviye mevcut kilide eşit veya büyükse kilidi aç
-            if (currentLevelId >= unlockedLevel) {
-                localStorage.setItem('unlockedLevel', currentLevelId + 1);
+            if (levelData.id >= unlockedLevel) {
+                localStorage.setItem('unlockedLevel', levelData.id + 1);
             }
 
-            this.scene.stop(currentScene);
-            this.scene.stop('SuccessScene');
+            if (levelData.ani) {
+                let visuals = JSON.parse(localStorage.getItem('unlockedVisuals') || "[]");
+                if (!visuals.includes(levelData.ani)) {
+                    visuals.push(levelData.ani);
+                    localStorage.setItem('unlockedVisuals', JSON.stringify(visuals));
+                }
+            }
 
-            if (nextScene && nextScene !== 'LevelSelect') {
+            this.stopAll(currentScene);
+
+            if (isFromGallery) {
+                this.scene.start('GalleryScene');
+            } else if (nextScene && nextScene !== 'LevelSelect') {
                 this.scene.start(nextScene);
             } else {
                 this.scene.start('LevelSelect');
@@ -52,30 +72,66 @@ export class SuccessScene extends Phaser.Scene {
         }, true);
     }
 
-    // GÜNCELLENMİŞ SEVİYE MANTIĞI
-    getCurrentLevelId(sceneName) {
-        // Her sahne ismine göre özel bir ID döndürüyoruz
-        if (sceneName.includes('ArrayPart')) return 1;       // Veri Ekleme
-        if (sceneName.includes('ArrayDeleteANI')) return 2;  // Veri Silme
-        if (sceneName.includes('ArrayUpdateANI')) return 3;  // Veri Düzenleme
-        if (sceneName.includes('LinkedList')) return 4;     // Bağlı Liste Başlangıç
-        return 1;
+    stopAll(currentScene) {
+        this.scene.stop(currentScene);
+        this.scene.stop('SuccessScene');
     }
 
-    createButton(x, y, label, callback, isPrimary = false) {
-        const btn = this.add.text(x, y, label, {
-            fontSize: '16px',
+    getLevelData(sceneName) {
+        const config = {
+            'ArrayPart': { id: 1, ani: 'ArrayPartANI' },
+            'ArrayDeletePart': { id: 2, ani: 'ArrayDeleteANI' },
+            'ArrayUpdatePart': { id: 3, ani: 'ArrayUpdateANI' },
+            'LinkedListNodePart': { id: 4, ani: 'LinkedListNodeANI' },
+            'LinkedListLinkPart': { id: 5, ani: 'LinkedListLinkANI' },
+            'LinkedListInsertPart': { id: 6, ani: 'LinkedListInsertANI' },
+            'LinkedListDeletePart': { id: 7, ani: 'LinkedListDeleteANI' }
+        };
+        const baseName = sceneName.endsWith('ANI') ? sceneName.replace('ANI', 'Part') : sceneName;
+        return config[baseName] || { id: 1, ani: null };
+    }
+
+    // YENİ: İkonlu Buton Oluşturucu
+    createIconButton(x, y, iconUnicode, label, callback, isPrimary = false) {
+        const container = this.add.container(x, y);
+
+        // Buton Kutusu
+        const btnBg = this.add.rectangle(0, 0, 100, 70, isPrimary ? Theme.primary : '#333333')
+            .setStrokeStyle(2, Theme.accent)
+            .setInteractive({ useHandCursor: true });
+
+        // FontAwesome İkonu
+        // SuccessScene.js içinde createIconButton metodundaki icon kısmını şununla değiştirin:
+
+        const icon = this.add.text(0, -10, iconUnicode, {
+            fontFamily: 'fontAwesome', // index.html'de tanımlayacağımız isim
+            fontSize: '24px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+
+        // Alt Metin
+        const text = this.add.text(0, 20, label, {
+            fontSize: '11px',
             fontFamily: Theme.fontFamily,
             color: '#ffffff',
-            backgroundColor: isPrimary ? Theme.primary : '#444444', // Siyah yerine koyu gri
-            padding: { x: 15, y: 8 }
-        })
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', callback)
-            .on('pointerover', () => btn.setStyle({ backgroundColor: Theme.accent }))
-            .on('pointerout', () => btn.setStyle({ backgroundColor: isPrimary ? Theme.primary : '#444444' }));
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
 
-        return btn;
+        container.add([btnBg, icon, text]);
+
+        // Efektler
+        btnBg.on('pointerdown', callback);
+        btnBg.on('pointerover', () => {
+            btnBg.setFillStyle(Theme.accent);
+            icon.setColor('#000000');
+            text.setColor('#000000');
+        });
+        btnBg.on('pointerout', () => {
+            btnBg.setFillStyle(isPrimary ? Theme.primary : '#333333');
+            icon.setColor('#ffffff');
+            text.setColor('#ffffff');
+        });
+
+        return container;
     }
 }

@@ -16,17 +16,26 @@ export class MainMenu extends Phaser.Scene {
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        // OYNA Butonu artık Seviye Seçim Ekranına Gider
+        // 1. OYNA Butonu
         this.createMenuButton(width / 2, height * 0.45, 'OYNA', () => {
-            this.scene.start('LevelSelect'); // Seviye Seçim Sahnesi
+            this.scene.start('LevelSelect');
         });
 
-        const unlockedVisuals = JSON.parse(localStorage.getItem('unlockedVisuals') || "[]");
+        // 2. ANİMASYONLAR Butonu (İsim güncellendi!)
+        // Veriyi kontrol ediyoruz
+        let unlockedVisuals = [];
+        try {
+            unlockedVisuals = JSON.parse(localStorage.getItem('unlockedVisuals') || "[]");
+        } catch (e) {
+            unlockedVisuals = [];
+        }
+
         const isVisualsEnabled = unlockedVisuals.length > 0;
 
-        this.createMenuButton(width / 2, height * 0.58, 'GÖSTERİMLER', () => {
+        // "GÖSTERİMLER" yerine "ANİMASYONLAR" yazıyoruz
+        this.createMenuButton(width / 2, height * 0.58, 'ANİMASYONLAR', () => {
             if (isVisualsEnabled) {
-                this.scene.start('Part2');
+                this.scene.start('GalleryScene');
             } else {
                 this.showLockedMessage();
             }
@@ -40,14 +49,16 @@ export class MainMenu extends Phaser.Scene {
     }
 
     createMenuButton(x, y, label, callback, enabled = true) {
-        const btnBg = this.add.rectangle(0, 0, 240, 60, enabled ? Theme.primary : 0x444444)
-            .setInteractive({ useHandCursor: true })
-            .setStrokeStyle(2, Theme.accent);
+        // Buton rengi: Kilitliyse koyu gri, açıksa ana renk
+        // MainMenu.js create() içine ekle:
+        const btnBg = this.add.rectangle(0, 0, 260, 60, enabled ? Theme.primary : 0x333333)
+            .setInteractive({ useHandCursor: enabled })
+            .setStrokeStyle(2, enabled ? Theme.accent : 0x666666);
 
         const btnText = this.add.text(0, 0, label, {
-            fontSize: '24px',
+            fontSize: '22px',
             fontFamily: Theme.fontFamily,
-            color: enabled ? '#ffffff' : '#888888',
+            color: enabled ? '#ffffff' : '#777777',
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
@@ -70,9 +81,10 @@ export class MainMenu extends Phaser.Scene {
     }
 
     showLockedMessage() {
-        const msg = this.add.text(this.scale.width / 2, this.scale.height * 0.65, 'Bölüm geçtikçe açılır!', {
-            fontSize: '16px', color: '#ff0054', fontFamily: Theme.fontFamily
+        const msg = this.add.text(this.scale.width / 2, this.scale.height * 0.65, 'Bölümleri geçtikçe animasyonlar açılır!', {
+            fontSize: '16px', color: '#ff0054', fontFamily: Theme.fontFamily, fontStyle: 'bold'
         }).setOrigin(0.5);
+
         this.time.delayedCall(2000, () => msg.destroy());
         this.cameras.main.shake(200, 0.005);
     }

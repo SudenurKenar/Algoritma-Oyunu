@@ -5,7 +5,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Algo-Quest</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
   <style>
+    /* Fontun sahnede titrememesi için sisteme önceden tanıtıyoruz */
+    @font-face {
+      font-family: 'Font Awesome 6 Free';
+      font-style: normal;
+      font-weight: 900;
+      font-display: block;
+      src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/webfonts/fa-solid-900.woff2') format('woff2');
+    }
+
     body {
       margin: 0;
       background-color: #1a0633;
@@ -14,6 +26,8 @@
       align-items: center;
       height: 100vh;
       overflow: hidden;
+      /* Görünmez bir karakterle fontun belleğe hemen oturmasını sağlıyoruz */
+      font-family: 'Font Awesome 6 Free', sans-serif;
     }
 
     #game-container {
@@ -24,8 +38,13 @@
 </head>
 
 <body>
+  <!-- Görünmez bir div ile fontun yüklenmesini zorluyoruz (Hack) -->
+  <div style="font-family: 'Font Awesome 6 Free'; font-weight: 900; visibility: hidden; position: absolute;">&#xf015;
+  </div>
+
   <div id="game-container"></div>
-  <!-- Vite projesinde ana giriş dosyanızın yolu -->
+
+  <!-- Giriş Dosyası -->
   <script type="module" src="./app.js"></script>
 </body>
 
